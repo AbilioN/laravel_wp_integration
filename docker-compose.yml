@@ -1,0 +1,68 @@
+services:
+  db:
+    image: mysql:5.7
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    volumes:
+      - db_data:/var/lib/mysql
+    ports:
+      - "3309:3306"
+
+  wordpress:
+    image: wordpress:latest
+    depends_on:
+      - db
+    ports:
+      - "8080:80"
+    restart: always
+    environment:
+      WORDPRESS_DB_HOST: db:3306
+      WORDPRESS_DB_NAME: ${WORDPRESS_DB_NAME}
+      WORDPRESS_DB_USER: ${WORDPRESS_DB_USER}
+      WORDPRESS_DB_PASSWORD: ${WORDPRESS_DB_PASSWORD}
+    volumes:
+      - ./wp-content:/var/www/html/wp-content
+      - ./wordpress-uploads:/var/www/html/wp-content/uploads
+
+  laravel:
+    build:
+      context: ./laravel
+      dockerfile: Dockerfile
+    depends_on:
+      - db
+    ports:
+      - "8005:8000"
+    restart: always
+    environment:
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_DATABASE: ${LARAVEL_DB_NAME}
+      DB_USERNAME: ${LARAVEL_DB_USER}
+      DB_PASSWORD: ${LARAVEL_DB_PASSWORD}
+      APP_ENV: local
+      APP_DEBUG: true
+    volumes:
+      - ./laravel:/var/www/html
+      - ./laravel-storage:/var/www/html/storage
+    working_dir: /var/www/html
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/sites-available:/etc/nginx/sites-available
+      - ./nginx/sites-enabled:/etc/nginx/sites-enabled
+    depends_on:
+      - wordpress
+      - laravel
+    restart: always
+
+volumes:
+  db_data:
