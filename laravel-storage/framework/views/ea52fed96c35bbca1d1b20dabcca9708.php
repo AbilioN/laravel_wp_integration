@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Posts do WordPress - Laravel</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         .post-card {
             transition: transform 0.2s;
@@ -17,13 +18,28 @@
             color: #666;
             font-size: 0.9em;
         }
+        .post-title {
+            color: #333;
+            text-decoration: none;
+        }
+        .post-title:hover {
+            color: #007bff;
+        }
+        .main-content {
+            margin-top: 2rem;
+        }
     </style>
 </head>
 <body>
-    <div class="container mt-4">
+    <!-- WordPress Dynamic Navbar -->
+    <?php echo $__env->make('components.wordpress-navbar', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+
+    <div class="container main-content">
         <div class="row">
             <div class="col-12">
-                <h1 class="mb-4">Posts do WordPress</h1>
+                <h1 class="mb-4">
+                    <i class="fas fa-newspaper me-2"></i>Posts do WordPress
+                </h1>
                 
                 <!-- Controles -->
                 <div class="row mb-4">
@@ -38,7 +54,9 @@
                         </form>
                     </div>
                     <div class="col-md-6 text-end">
-                        <a href="<?php echo e(route('wordpress.pages.index')); ?>" class="btn btn-outline-secondary">Ver Páginas</a>
+                        <a href="<?php echo e(route('wordpress.pages.index')); ?>" class="btn btn-outline-secondary">
+                            <i class="fas fa-file-alt me-1"></i>Ver Páginas
+                        </a>
                     </div>
                 </div>
 
@@ -49,8 +67,9 @@
                                 <div class="card post-card h-100">
                                     <div class="card-body">
                                         <h5 class="card-title">
-                                            <a href="#" class="text-decoration-none">
-                                                <?php echo e($post->post_title); ?>
+                                            <a href="http://wordpress.local/?p=<?php echo e($post->ID); ?>" 
+                                               target="_blank" class="post-title">
+                                                <i class="fas fa-newspaper me-1"></i><?php echo e($post->post_title); ?>
 
                                             </a>
                                         </h5>
@@ -63,20 +82,20 @@
                                         
                                         <div class="d-flex justify-content-between align-items-center">
                                             <small class="text-muted">
+                                                <i class="fas fa-calendar me-1"></i>
                                                 <?php echo e(\Carbon\Carbon::parse($post->post_date)->format('d/m/Y')); ?>
 
                                             </small>
-                                            <span class="badge bg-success"><?php echo e($post->post_type); ?></span>
+                                            <span class="badge bg-success">
+                                                <i class="fas fa-newspaper me-1"></i><?php echo e($post->post_type); ?>
+
+                                            </span>
                                         </div>
                                     </div>
                                     <div class="card-footer">
                                         <a href="http://wordpress.local/?p=<?php echo e($post->ID); ?>" 
-                                           target="_blank" class="btn btn-sm btn-outline-primary">
-                                            Ver no WordPress
-                                        </a>
-                                        <a href="http://wordpress.local/wp-admin/post.php?post=<?php echo e($post->ID); ?>&action=edit" 
-                                           target="_blank" class="btn btn-sm btn-outline-info">
-                                            Editar
+                                           target="_blank" class="btn btn-sm btn-primary">
+                                            <i class="fas fa-external-link-alt me-1"></i>Ler no WordPress
                                         </a>
                                     </div>
                                 </div>
@@ -85,7 +104,7 @@
                     </div>
                 <?php else: ?>
                     <div class="alert alert-info">
-                        <h4>Nenhum post encontrado</h4>
+                        <h4><i class="fas fa-info-circle me-2"></i>Nenhum post encontrado</h4>
                         <p>Não há posts publicados no WordPress ou a conexão com o banco não está funcionando.</p>
                     </div>
                 <?php endif; ?>

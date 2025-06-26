@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Posts do WordPress - Laravel</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         .post-card {
             transition: transform 0.2s;
@@ -24,13 +25,21 @@
         .post-title:hover {
             color: #007bff;
         }
+        .main-content {
+            margin-top: 2rem;
+        }
     </style>
 </head>
 <body>
-    <div class="container mt-4">
+    <!-- WordPress Dynamic Navbar -->
+    @include('components.wordpress-navbar')
+
+    <div class="container main-content">
         <div class="row">
             <div class="col-12">
-                <h1 class="mb-4">Posts do WordPress</h1>
+                <h1 class="mb-4">
+                    <i class="fas fa-newspaper me-2"></i>Posts do WordPress
+                </h1>
                 
                 <!-- Controles -->
                 <div class="row mb-4">
@@ -45,7 +54,9 @@
                         </form>
                     </div>
                     <div class="col-md-6 text-end">
-                        <a href="{{ route('wordpress.pages.index') }}" class="btn btn-outline-secondary">Ver Páginas</a>
+                        <a href="{{ route('wordpress.pages.index') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-file-alt me-1"></i>Ver Páginas
+                        </a>
                     </div>
                 </div>
 
@@ -58,7 +69,7 @@
                                         <h5 class="card-title">
                                             <a href="http://wordpress.local/?p={{ $post->ID }}" 
                                                target="_blank" class="post-title">
-                                                {{ $post->post_title }}
+                                                <i class="fas fa-newspaper me-1"></i>{{ $post->post_title }}
                                             </a>
                                         </h5>
                                         
@@ -70,15 +81,18 @@
                                         
                                         <div class="d-flex justify-content-between align-items-center">
                                             <small class="text-muted">
+                                                <i class="fas fa-calendar me-1"></i>
                                                 {{ \Carbon\Carbon::parse($post->post_date)->format('d/m/Y') }}
                                             </small>
-                                            <span class="badge bg-success">{{ $post->post_type }}</span>
+                                            <span class="badge bg-success">
+                                                <i class="fas fa-newspaper me-1"></i>{{ $post->post_type }}
+                                            </span>
                                         </div>
                                     </div>
                                     <div class="card-footer">
                                         <a href="http://wordpress.local/?p={{ $post->ID }}" 
                                            target="_blank" class="btn btn-sm btn-primary">
-                                            Ler no WordPress
+                                            <i class="fas fa-external-link-alt me-1"></i>Ler no WordPress
                                         </a>
                                     </div>
                                 </div>
@@ -87,7 +101,7 @@
                     </div>
                 @else
                     <div class="alert alert-info">
-                        <h4>Nenhum post encontrado</h4>
+                        <h4><i class="fas fa-info-circle me-2"></i>Nenhum post encontrado</h4>
                         <p>Não há posts publicados no WordPress ou a conexão com o banco não está funcionando.</p>
                     </div>
                 @endif
