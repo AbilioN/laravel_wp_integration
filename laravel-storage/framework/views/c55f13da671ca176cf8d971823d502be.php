@@ -13,32 +13,61 @@ $navigationPages = $navbarData['pages'];
 $recentPosts = $navbarData['recentPosts'];
 ?>
 
-<nav class="navbar navbar-expand-lg navbar-light bg-light">
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
     <div class="container">
-        <!-- Logo/Brand -->
-        <a class="navbar-brand" href="<?php echo e(url('/')); ?>">
+        <a class="navbar-brand" href="/">
+            <i class="fas fa-home me-2"></i>
             <?php echo e(\App\Models\WordPressSettings::getSiteTitle()); ?>
 
         </a>
-
-        <!-- Toggle button for mobile -->
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
             <span class="navbar-toggler-icon"></span>
         </button>
-
-        <!-- Navigation items -->
+        
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav me-auto">
-                <!-- Dynamic WordPress Pages -->
-                <?php $__currentLoopData = $navigationPages; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $page): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                    <li class="nav-item">
-                        <a class="nav-link <?php echo e(request()->routeIs('wordpress.pages.show') && request()->route('slug') == $page->post_name ? 'active' : ''); ?>" 
-                           href="<?php echo e(route('wordpress.pages.show', $page->post_name)); ?>">
-                            <?php echo e($page->post_title); ?>
-
-                        </a>
-                    </li>
-                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                <li class="nav-item">
+                    <a class="nav-link" href="/">
+                        <i class="fas fa-home me-1"></i>Início
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="<?php echo e(route('wordpress.pages.index')); ?>">
+                        <i class="fas fa-file-alt me-1"></i>Páginas
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="<?php echo e(route('wordpress.posts.index')); ?>">
+                        <i class="fas fa-newspaper me-1"></i>Posts
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="<?php echo e(route('wordpress.pages.my-account')); ?>">
+                        <i class="fas fa-user me-1"></i>Minha Conta
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="<?php echo e(route('pwa.status')); ?>">
+                        <i class="fas fa-mobile-alt me-1"></i>PWA Status
+                    </a>
+                </li>
+            </ul>
+            
+            <ul class="navbar-nav">
+                <!-- PWA Install Button -->
+                <li class="nav-item">
+                    <button id="install-pwa" class="btn btn-outline-light btn-sm" style="display: none;">
+                        <i class="fas fa-download me-1"></i>Instalar App
+                    </button>
+                </li>
+                
+                <!-- WordPress Link -->
+                <li class="nav-item">
+                    <a class="nav-link" href="<?php echo e(\App\Models\WordPressSettings::getWordPressUrl()); ?>" target="_blank">
+                        <i class="fas fa-external-link-alt me-1"></i>WordPress
+                    </a>
+                </li>
             </ul>
         </div>
     </div>

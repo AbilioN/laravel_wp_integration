@@ -47,3 +47,12 @@ Route::get('/my-account/{endpoint}', function ($endpoint) {
 
 // API para My Account
 Route::get('/api/my-account', [WordPressController::class, 'myAccountApi'])->name('my-account.api');
+
+// PWA Routes
+Route::prefix('pwa')->name('pwa.')->group(function () {
+    Route::get('/status', [App\Http\Controllers\PWAController::class, 'status'])->name('status');
+    Route::post('/subscribe', [App\Http\Controllers\PWAController::class, 'subscribe'])->name('subscribe');
+    Route::post('/send-notification', [App\Http\Controllers\PWAController::class, 'sendNotification'])->name('send-notification');
+    Route::get('/manifest', [App\Http\Controllers\PWAController::class, 'manifest'])->name('manifest');
+    Route::post('/clear-cache', [App\Http\Controllers\PWAController::class, 'clearCache'])->name('clear-cache');
+});
