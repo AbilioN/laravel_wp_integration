@@ -32,6 +32,10 @@ Route::prefix('wordpress')->name('wordpress.')->group(function () {
     Route::get('/search', [WordPressController::class, 'search'])->name('search');
 });
 
+// Autenticação WordPress
+Route::post('/wordpress/login', [WordPressController::class, 'processWordPressLogin'])->name('wordpress.login');
+Route::post('/wordpress/logout', [WordPressController::class, 'processWordPressLogout'])->name('wordpress.logout');
+
 // WooCommerce My Account - redireciona para WordPress
 Route::get('/my-account', [WordPressController::class, 'myAccount'])->name('my-account');
 

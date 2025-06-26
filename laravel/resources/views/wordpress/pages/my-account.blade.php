@@ -69,6 +69,13 @@
             padding: 1rem;
             margin-bottom: 2rem;
         }
+        .user-info {
+            background-color: #e7f3ff;
+            border: 1px solid #b3d9ff;
+            border-radius: 0.375rem;
+            padding: 1rem;
+            margin-bottom: 2rem;
+        }
     </style>
 </head>
 <body>
@@ -85,26 +92,49 @@
                 @if(!$isLoggedIn)
                     <!-- Usuário não logado - Formulário de Login -->
                     <div class="wordpress-redirect-notice">
-                        <h5><i class="fas fa-info-circle me-2"></i>Atenção</h5>
-                        <p class="mb-2">Esta é uma simulação da página "Minha Conta" do WooCommerce. Para funcionalidade completa, você será redirecionado para o WordPress.</p>
-                        <a href="{{ \App\Models\WordPressSettings::getWordPressUrl() }}/my-account" class="btn btn-primary btn-sm">
-                            <i class="fas fa-external-link-alt me-1"></i>Ir para WordPress
-                        </a>
+                        <h5><i class="fas fa-info-circle me-2"></i>Login Integrado</h5>
+                        <p class="mb-2">Faça login usando suas credenciais do WordPress. Sua sessão será sincronizada entre Laravel e WordPress.</p>
                     </div>
 
                     <div class="woocommerce-MyAccount-content">
                         <div class="login-form">
                             <h3 class="mb-4">Login</h3>
                             
-                            <form method="post" action="{{ \App\Models\WordPressSettings::getWordPressUrl() }}/wp-login.php">
+                            @if($errors->any())
+                                <div class="alert alert-danger">
+                                    <ul class="mb-0">
+                                        @foreach($errors->all() as $error)
+                                            <li>{{ $error }}</li>
+                                        @endforeach
+                                    </ul>
+                                </div>
+                            @endif
+                            
+                            <form method="post" action="{{ route('wordpress.login') }}">
+                                @csrf
                                 <div class="mb-3">
                                     <label for="username" class="form-label">Nome de usuário ou email *</label>
-                                    <input type="text" class="form-control" id="username" name="log" required>
+                                    <input type="text" 
+                                           class="form-control @error('log') is-invalid @enderror" 
+                                           id="username" 
+                                           name="log" 
+                                           value="{{ old('log') }}"
+                                           required>
+                                    @error('log')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
                                 </div>
                                 
                                 <div class="mb-3">
                                     <label for="password" class="form-label">Senha *</label>
-                                    <input type="password" class="form-control" id="password" name="pwd" required>
+                                    <input type="password" 
+                                           class="form-control @error('pwd') is-invalid @enderror" 
+                                           id="password" 
+                                           name="pwd" 
+                                           required>
+                                    @error('pwd')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
                                 </div>
                                 
                                 <div class="mb-3 form-check">
@@ -120,7 +150,7 @@
                                     </button>
                                     
                                     <a href="{{ \App\Models\WordPressSettings::getWordPressUrl() }}/my-account" class="btn btn-outline-secondary">
-                                        <i class="fas fa-user-plus me-1"></i>Registrar
+                                        <i class="fas fa-external-link-alt me-1"></i>Ir para WordPress
                                     </a>
                                 </div>
                             </form>
@@ -128,6 +158,12 @@
                     </div>
                 @else
                     <!-- Usuário logado - Dashboard da Conta -->
+                    <div class="user-info">
+                        <h5><i class="fas fa-user-check me-2"></i>Usuário Logado</h5>
+                        <p class="mb-2">Bem-vindo, <strong>{{ $currentUser->display_name ?: $currentUser->user_login }}</strong>!</p>
+                        <p class="mb-0">Sua sessão está sincronizada entre Laravel e WordPress.</p>
+                    </div>
+
                     <div class="row">
                         <div class="col-md-3">
                             <nav class="woocommerce-MyAccount-navigation">
@@ -163,9 +199,12 @@
                                         </a>
                                     </li>
                                     <li>
-                                        <a href="{{ \App\Models\WordPressSettings::getWordPressUrl() }}/my-account/customer-logout">
-                                            <i class="fas fa-sign-out-alt me-1"></i>Sair
-                                        </a>
+                                        <form method="post" action="{{ route('wordpress.logout') }}" class="d-inline">
+                                            @csrf
+                                            <button type="submit" class="btn btn-link p-0 m-0 text-decoration-none">
+                                                <i class="fas fa-sign-out-alt me-1"></i>Sair
+                                            </button>
+                                        </form>
                                     </li>
                                 </ul>
                             </nav>
@@ -177,8 +216,11 @@
                                     <h3>Dashboard</h3>
                                     
                                     <p>
-                                        Olá <strong>Usuário</strong> (não é <strong>Usuário</strong>? 
-                                        <a href="{{ \App\Models\WordPressSettings::getWordPressUrl() }}/my-account/customer-logout">Sair</a>)
+                                        Olá <strong>{{ $currentUser->display_name ?: $currentUser->user_login }}</strong> (não é <strong>{{ $currentUser->display_name ?: $currentUser->user_login }}</strong>? 
+                                        <form method="post" action="{{ route('wordpress.logout') }}" class="d-inline">
+                                            @csrf
+                                            <button type="submit" class="btn btn-link p-0 m-0 text-decoration-none">Sair</button>
+                                        </form>)
                                     </p>
                                     
                                     <p>
@@ -190,10 +232,9 @@
                                         <a href="{{ \App\Models\WordPressSettings::getWordPressUrl() }}/my-account/edit-account">editar sua senha e detalhes da conta</a>.
                                     </p>
                                     
-                                    <div class="alert alert-info">
-                                        <i class="fas fa-info-circle me-2"></i>
-                                        <strong>Nota:</strong> Esta é uma simulação. Para acessar dados reais da sua conta, 
-                                        <a href="{{ \App\Models\WordPressSettings::getWordPressUrl() }}/my-account" class="alert-link">clique aqui para ir ao WordPress</a>.
+                                    <div class="alert alert-success">
+                                        <i class="fas fa-check-circle me-2"></i>
+                                        <strong>Sucesso!</strong> Você está logado no Laravel e WordPress simultaneamente.
                                     </div>
                                 </div>
                             </div>

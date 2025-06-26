@@ -218,15 +218,9 @@ class WordPressController extends Controller
                 abort(404, 'Página My Account não encontrada no WordPress');
             }
             
-            // Buscar dados do usuário atual (se autenticado no WordPress)
-            $currentUser = null;
-            $isLoggedIn = false;
-            
-            // Verificar se há cookie de sessão do WordPress
-            if (isset($_COOKIE['wordpress_logged_in_'])) {
-                $isLoggedIn = true;
-                // Aqui você pode buscar dados do usuário se necessário
-            }
+            // Verificar se o usuário está logado no WordPress
+            $currentUser = $this->getCurrentWordPressUser();
+            $isLoggedIn = !is_null($currentUser);
             
             // Buscar dados básicos da página
             $pageData = [
@@ -271,5 +265,238 @@ class WordPressController extends Controller
                 'wordpress_url' => WordPressSettings::getWordPressUrl()
             ], 500);
         }
+    }
+
+    /**
+     * Processar login do WordPress
+     */
+    public function processWordPressLogin(Request $request)
+    {
+        try {
+            $username = $request->input('log');
+            $password = $request->input('pwd');
+            $remember = $request->has('rememberme');
+            
+            // Conectar ao banco do WordPress
+            $wordpressDb = DB::connection('wordpress');
+            
+            // Buscar usuário
+            $user = $wordpressDb->table('users')
+                ->where('user_login', $username)
+                ->orWhere('user_email', $username)
+                ->first();
+            
+            if (!$user) {
+                return back()->withErrors(['username' => 'Usuário não encontrado']);
+            }
+            
+            // Verificar senha usando hash do WordPress
+            if (!$this->wp_check_password($password, $user->user_pass)) {
+                return back()->withErrors(['password' => 'Senha incorreta']);
+            }
+            
+            // Criar sessão do WordPress
+            $this->createWordPressSession($user, $remember);
+            
+            // Criar sessão do Laravel
+            $this->createLaravelSession($user);
+            
+            return redirect()->intended('/wordpress/pages/my-account');
+            
+        } catch (\Exception $e) {
+            return back()->withErrors(['general' => 'Erro ao fazer login: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Processar logout
+     */
+    public function processWordPressLogout(Request $request)
+    {
+        try {
+            // Destruir sessão do WordPress
+            $this->destroyWordPressSession();
+            
+            // Destruir sessão do Laravel
+            $this->destroyLaravelSession();
+            
+            return redirect('/')->with('success', 'Logout realizado com sucesso');
+            
+        } catch (\Exception $e) {
+            return redirect('/')->with('error', 'Erro ao fazer logout');
+        }
+    }
+
+    /**
+     * Buscar usuário atual do WordPress
+     */
+    private function getCurrentWordPressUser()
+    {
+        try {
+            // Verificar cookie de sessão do WordPress
+            $cookieName = 'wordpress_logged_in_' . md5($this->getSiteUrl());
+            
+            if (!isset($_COOKIE[$cookieName])) {
+                return null;
+            }
+            
+            $cookieValue = $_COOKIE[$cookieName];
+            $parts = explode('|', $cookieValue);
+            
+            if (count($parts) !== 2) {
+                return null;
+            }
+            
+            $username = $parts[0];
+            $expiration = $parts[1];
+            
+            // Verificar se o cookie expirou
+            if (time() > $expiration) {
+                return null;
+            }
+            
+            // Buscar usuário no banco
+            $wordpressDb = DB::connection('wordpress');
+            $user = $wordpressDb->table('users')
+                ->where('user_login', $username)
+                ->first();
+            
+            return $user;
+            
+        } catch (\Exception $e) {
+            return null;
+        }
+    }
+
+    /**
+     * Criar sessão do WordPress
+     */
+    private function createWordPressSession($user, $remember = false)
+    {
+        try {
+            $wordpressDb = DB::connection('wordpress');
+            
+            // Gerar token de sessão
+            $sessionToken = $this->wp_generate_password(32, false);
+            
+            // Calcular expiração
+            $expiration = $remember ? time() + (30 * 86400) : time() + (2 * 86400); // 30 dias ou 2 dias
+            
+            // Salvar sessão no banco
+            $wordpressDb->table('usermeta')->insert([
+                'user_id' => $user->ID,
+                'meta_key' => 'session_tokens',
+                'meta_value' => serialize([$sessionToken => [
+                    'expiration' => $expiration,
+                    'ip' => $_SERVER['REMOTE_ADDR'] ?? '',
+                    'ua' => $_SERVER['HTTP_USER_AGENT'] ?? ''
+                ]])
+            ]);
+            
+            // Definir cookie
+            $cookieName = 'wordpress_logged_in_' . md5($this->getSiteUrl());
+            $cookieValue = $user->user_login . '|' . $expiration;
+            
+            setcookie($cookieName, $cookieValue, $expiration, '/', '', $this->is_ssl(), true);
+            
+        } catch (\Exception $e) {
+            throw new \Exception('Erro ao criar sessão do WordPress: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Criar sessão do Laravel
+     */
+    private function createLaravelSession($user)
+    {
+        try {
+            // Criar ou atualizar usuário no Laravel
+            $laravelUser = \App\Models\User::updateOrCreate(
+                ['email' => $user->user_email],
+                [
+                    'name' => $user->display_name ?: $user->user_login,
+                    'password' => bcrypt(\Illuminate\Support\Str::random(16)), // Senha aleatória para Laravel
+                    'wordpress_id' => $user->ID,
+                    'wordpress_username' => $user->user_login
+                ]
+            );
+            
+            // Fazer login no Laravel
+            \Illuminate\Support\Facades\Auth::login($laravelUser);
+            
+        } catch (\Exception $e) {
+            throw new \Exception('Erro ao criar sessão do Laravel: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Destruir sessão do WordPress
+     */
+    private function destroyWordPressSession()
+    {
+        try {
+            $cookieName = 'wordpress_logged_in_' . md5($this->getSiteUrl());
+            
+            if (isset($_COOKIE[$cookieName])) {
+                setcookie($cookieName, '', time() - 3600, '/', '', $this->is_ssl(), true);
+            }
+            
+        } catch (\Exception $e) {
+            // Ignorar erros ao destruir sessão
+        }
+    }
+
+    /**
+     * Destruir sessão do Laravel
+     */
+    private function destroyLaravelSession()
+    {
+        try {
+            \Illuminate\Support\Facades\Auth::logout();
+        } catch (\Exception $e) {
+            // Ignorar erros ao destruir sessão
+        }
+    }
+
+    /**
+     * Função auxiliar para verificar senha do WordPress
+     */
+    private function wp_check_password($password, $hash)
+    {
+        return password_verify($password, $hash);
+    }
+
+    /**
+     * Função auxiliar para gerar senha do WordPress
+     */
+    private function wp_generate_password($length = 12, $special_chars = true)
+    {
+        $chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        if ($special_chars) {
+            $chars .= '!@#$%^&*()_+-=[]{}|;:,.<>?';
+        }
+        
+        $password = '';
+        for ($i = 0; $i < $length; $i++) {
+            $password .= $chars[random_int(0, strlen($chars) - 1)];
+        }
+        
+        return $password;
+    }
+
+    /**
+     * Função auxiliar para obter URL do site
+     */
+    private function getSiteUrl()
+    {
+        return WordPressSettings::getWordPressUrl();
+    }
+
+    /**
+     * Função auxiliar para verificar se é HTTPS
+     */
+    private function is_ssl()
+    {
+        return isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on';
     }
 }

@@ -69,6 +69,13 @@
             padding: 1rem;
             margin-bottom: 2rem;
         }
+        .user-info {
+            background-color: #e7f3ff;
+            border: 1px solid #b3d9ff;
+            border-radius: 0.375rem;
+            padding: 1rem;
+            margin-bottom: 2rem;
+        }
     </style>
 </head>
 <body>
@@ -86,26 +93,77 @@
                 <?php if(!$isLoggedIn): ?>
                     <!-- Usuário não logado - Formulário de Login -->
                     <div class="wordpress-redirect-notice">
-                        <h5><i class="fas fa-info-circle me-2"></i>Atenção</h5>
-                        <p class="mb-2">Esta é uma simulação da página "Minha Conta" do WooCommerce. Para funcionalidade completa, você será redirecionado para o WordPress.</p>
-                        <a href="<?php echo e(\App\Models\WordPressSettings::getWordPressUrl()); ?>/my-account" class="btn btn-primary btn-sm">
-                            <i class="fas fa-external-link-alt me-1"></i>Ir para WordPress
-                        </a>
+                        <h5><i class="fas fa-info-circle me-2"></i>Login Integrado</h5>
+                        <p class="mb-2">Faça login usando suas credenciais do WordPress. Sua sessão será sincronizada entre Laravel e WordPress.</p>
                     </div>
 
                     <div class="woocommerce-MyAccount-content">
                         <div class="login-form">
                             <h3 class="mb-4">Login</h3>
                             
-                            <form method="post" action="<?php echo e(\App\Models\WordPressSettings::getWordPressUrl()); ?>/wp-login.php">
+                            <?php if($errors->any()): ?>
+                                <div class="alert alert-danger">
+                                    <ul class="mb-0">
+                                        <?php $__currentLoopData = $errors->all(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $error): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                            <li><?php echo e($error); ?></li>
+                                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                                    </ul>
+                                </div>
+                            <?php endif; ?>
+                            
+                            <form method="post" action="<?php echo e(route('wordpress.login')); ?>">
+                                <?php echo csrf_field(); ?>
                                 <div class="mb-3">
                                     <label for="username" class="form-label">Nome de usuário ou email *</label>
-                                    <input type="text" class="form-control" id="username" name="log" required>
+                                    <input type="text" 
+                                           class="form-control <?php $__errorArgs = ['log'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>" 
+                                           id="username" 
+                                           name="log" 
+                                           value="<?php echo e(old('log')); ?>"
+                                           required>
+                                    <?php $__errorArgs = ['log'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                                        <div class="invalid-feedback"><?php echo e($message); ?></div>
+                                    <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                                 </div>
                                 
                                 <div class="mb-3">
                                     <label for="password" class="form-label">Senha *</label>
-                                    <input type="password" class="form-control" id="password" name="pwd" required>
+                                    <input type="password" 
+                                           class="form-control <?php $__errorArgs = ['pwd'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>" 
+                                           id="password" 
+                                           name="pwd" 
+                                           required>
+                                    <?php $__errorArgs = ['pwd'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                                        <div class="invalid-feedback"><?php echo e($message); ?></div>
+                                    <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                                 </div>
                                 
                                 <div class="mb-3 form-check">
@@ -121,7 +179,7 @@
                                     </button>
                                     
                                     <a href="<?php echo e(\App\Models\WordPressSettings::getWordPressUrl()); ?>/my-account" class="btn btn-outline-secondary">
-                                        <i class="fas fa-user-plus me-1"></i>Registrar
+                                        <i class="fas fa-external-link-alt me-1"></i>Ir para WordPress
                                     </a>
                                 </div>
                             </form>
@@ -129,6 +187,12 @@
                     </div>
                 <?php else: ?>
                     <!-- Usuário logado - Dashboard da Conta -->
+                    <div class="user-info">
+                        <h5><i class="fas fa-user-check me-2"></i>Usuário Logado</h5>
+                        <p class="mb-2">Bem-vindo, <strong><?php echo e($currentUser->display_name ?: $currentUser->user_login); ?></strong>!</p>
+                        <p class="mb-0">Sua sessão está sincronizada entre Laravel e WordPress.</p>
+                    </div>
+
                     <div class="row">
                         <div class="col-md-3">
                             <nav class="woocommerce-MyAccount-navigation">
@@ -164,9 +228,12 @@
                                         </a>
                                     </li>
                                     <li>
-                                        <a href="<?php echo e(\App\Models\WordPressSettings::getWordPressUrl()); ?>/my-account/customer-logout">
-                                            <i class="fas fa-sign-out-alt me-1"></i>Sair
-                                        </a>
+                                        <form method="post" action="<?php echo e(route('wordpress.logout')); ?>" class="d-inline">
+                                            <?php echo csrf_field(); ?>
+                                            <button type="submit" class="btn btn-link p-0 m-0 text-decoration-none">
+                                                <i class="fas fa-sign-out-alt me-1"></i>Sair
+                                            </button>
+                                        </form>
                                     </li>
                                 </ul>
                             </nav>
@@ -178,8 +245,11 @@
                                     <h3>Dashboard</h3>
                                     
                                     <p>
-                                        Olá <strong>Usuário</strong> (não é <strong>Usuário</strong>? 
-                                        <a href="<?php echo e(\App\Models\WordPressSettings::getWordPressUrl()); ?>/my-account/customer-logout">Sair</a>)
+                                        Olá <strong><?php echo e($currentUser->display_name ?: $currentUser->user_login); ?></strong> (não é <strong><?php echo e($currentUser->display_name ?: $currentUser->user_login); ?></strong>? 
+                                        <form method="post" action="<?php echo e(route('wordpress.logout')); ?>" class="d-inline">
+                                            <?php echo csrf_field(); ?>
+                                            <button type="submit" class="btn btn-link p-0 m-0 text-decoration-none">Sair</button>
+                                        </form>)
                                     </p>
                                     
                                     <p>
@@ -191,10 +261,9 @@
                                         <a href="<?php echo e(\App\Models\WordPressSettings::getWordPressUrl()); ?>/my-account/edit-account">editar sua senha e detalhes da conta</a>.
                                     </p>
                                     
-                                    <div class="alert alert-info">
-                                        <i class="fas fa-info-circle me-2"></i>
-                                        <strong>Nota:</strong> Esta é uma simulação. Para acessar dados reais da sua conta, 
-                                        <a href="<?php echo e(\App\Models\WordPressSettings::getWordPressUrl()); ?>/my-account" class="alert-link">clique aqui para ir ao WordPress</a>.
+                                    <div class="alert alert-success">
+                                        <i class="fas fa-check-circle me-2"></i>
+                                        <strong>Sucesso!</strong> Você está logado no Laravel e WordPress simultaneamente.
                                     </div>
                                 </div>
                             </div>
