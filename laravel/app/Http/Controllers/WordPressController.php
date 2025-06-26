@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use App\Models\WordPressPost;
 use App\Models\WordPressMenu;
 use Illuminate\Support\Facades\Cache;
+use App\Models\WordPressSettings;
+use Illuminate\Support\Facades\DB;
 
 class WordPressController extends Controller
 {
@@ -153,5 +155,120 @@ class WordPressController extends Controller
             'success' => true,
             'message' => 'Cache da navbar limpo com sucesso'
         ]);
+    }
+
+    /**
+     * Buscar o conteúdo do shortcode My Account do WordPress
+     */
+    public function myAccount()
+    {
+        try {
+            // Conectar ao banco do WordPress
+            $wordpressDb = DB::connection('wordpress');
+            
+            // Buscar a página My Account
+            $myAccountPage = $wordpressDb->table('wp_posts')
+                ->where('post_type', 'page')
+                ->where('post_status', 'publish')
+                ->where('post_content', 'like', '%woocommerce_my_account%')
+                ->first();
+            
+            if (!$myAccountPage) {
+                // Se não encontrar a página, redirecionar para WordPress
+                $wordpressUrl = WordPressSettings::getWordPressUrl();
+                return redirect($wordpressUrl . '/my-account');
+            }
+            
+            // Buscar o conteúdo processado (se disponível)
+            $content = $myAccountPage->post_content;
+            
+            // Se contém o shortcode, redirecionar para WordPress
+            if (strpos($content, 'woocommerce_my_account') !== false) {
+                $wordpressUrl = WordPressSettings::getWordPressUrl();
+                return redirect($wordpressUrl . '/my-account');
+            }
+            
+            return view('wordpress.my-account', compact('content'));
+            
+        } catch (\Exception $e) {
+            // Em caso de erro, redirecionar para WordPress
+            $wordpressUrl = WordPressSettings::getWordPressUrl();
+            return redirect($wordpressUrl . '/my-account');
+        }
+    }
+
+    /**
+     * Exibir a página My Account do WordPress com conteúdo processado
+     */
+    public function showMyAccountPage()
+    {
+        try {
+            // Conectar ao banco do WordPress
+            $wordpressDb = DB::connection('wordpress');
+            
+            // Buscar a página My Account
+            $myAccountPage = $wordpressDb->table('wp_posts')
+                ->where('post_type', 'page')
+                ->where('post_status', 'publish')
+                ->where('post_content', 'like', '%woocommerce_my_account%')
+                ->first();
+            
+            if (!$myAccountPage) {
+                abort(404, 'Página My Account não encontrada no WordPress');
+            }
+            
+            // Buscar dados do usuário atual (se autenticado no WordPress)
+            $currentUser = null;
+            $isLoggedIn = false;
+            
+            // Verificar se há cookie de sessão do WordPress
+            if (isset($_COOKIE['wordpress_logged_in_'])) {
+                $isLoggedIn = true;
+                // Aqui você pode buscar dados do usuário se necessário
+            }
+            
+            // Buscar dados básicos da página
+            $pageData = [
+                'ID' => $myAccountPage->ID,
+                'post_title' => $myAccountPage->post_title,
+                'post_content' => $myAccountPage->post_content,
+                'post_date' => $myAccountPage->post_date,
+                'post_modified' => $myAccountPage->post_modified,
+                'post_name' => $myAccountPage->post_name
+            ];
+            
+            // Buscar meta dados da página
+            $metaData = $wordpressDb->table('wp_postmeta')
+                ->where('post_id', $myAccountPage->ID)
+                ->get()
+                ->keyBy('meta_key');
+            
+            return view('wordpress.pages.my-account', compact('pageData', 'metaData', 'isLoggedIn', 'currentUser'));
+            
+        } catch (\Exception $e) {
+            abort(500, 'Erro ao carregar página My Account: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * API para buscar dados do My Account (se necessário)
+     */
+    public function myAccountApi()
+    {
+        try {
+            $wordpressDb = DB::connection('wordpress');
+            
+            return response()->json([
+                'message' => 'My Account API endpoint',
+                'wordpress_url' => WordPressSettings::getWordPressUrl(),
+                'note' => 'Redirect to WordPress for full functionality'
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Failed to fetch account data',
+                'wordpress_url' => WordPressSettings::getWordPressUrl()
+            ], 500);
+        }
     }
 }
