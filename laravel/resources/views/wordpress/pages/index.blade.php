@@ -17,6 +17,13 @@
             color: #666;
             font-size: 0.9em;
         }
+        .page-title {
+            color: #333;
+            text-decoration: none;
+        }
+        .page-title:hover {
+            color: #007bff;
+        }
     </style>
 </head>
 <body>
@@ -46,7 +53,7 @@
                                     <div class="card-body">
                                         <h5 class="card-title">
                                             <a href="{{ route('wordpress.pages.show', $page->post_name) }}" 
-                                               class="text-decoration-none">
+                                               class="page-title">
                                                 {{ $page->post_title }}
                                             </a>
                                         </h5>
@@ -66,12 +73,8 @@
                                     </div>
                                     <div class="card-footer">
                                         <a href="{{ route('wordpress.pages.show', $page->post_name) }}" 
-                                           class="btn btn-sm btn-outline-primary">
-                                            Ler mais
-                                        </a>
-                                        <a href="{{ route('wordpress.pages.showById', $page->ID) }}" 
-                                           class="btn btn-sm btn-outline-secondary">
-                                            Por ID
+                                           class="btn btn-sm btn-primary">
+                                            Ler página
                                         </a>
                                     </div>
                                 </div>

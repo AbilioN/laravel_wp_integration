@@ -27,6 +27,13 @@
             font-weight: bold;
             color: #495057;
         }
+        .page-title {
+            color: #333;
+            text-decoration: none;
+        }
+        .page-title:hover {
+            color: #007bff;
+        }
     </style>
 </head>
 <body>
@@ -37,7 +44,7 @@
                 <nav aria-label="breadcrumb" class="mb-4">
                     <ol class="breadcrumb">
                         <li class="breadcrumb-item">
-                            <a href="{{ route('wordpress.pages.index') }}">Páginas</a>
+                            <a href="{{ route('wordpress.pages.index') }}" class="page-title">Páginas</a>
                         </li>
                         <li class="breadcrumb-item active" aria-current="page">{{ $page->post_title }}</li>
                     </ol>
@@ -110,17 +117,13 @@
 
                         <!-- Links úteis -->
                         <div class="mt-4">
-                            <h5>Ações</h5>
+                            <h5>Navegação</h5>
                             <div class="d-grid gap-2">
                                 <a href="{{ route('wordpress.pages.index') }}" class="btn btn-outline-primary">
                                     ← Voltar para Páginas
                                 </a>
                                 <a href="{{ route('wordpress.posts.index') }}" class="btn btn-outline-secondary">
                                     Ver Posts
-                                </a>
-                                <a href="http://wordpress.local/wp-admin/post.php?post={{ $page->ID }}&action=edit" 
-                                   target="_blank" class="btn btn-outline-info">
-                                    Editar no WordPress
                                 </a>
                             </div>
                         </div>

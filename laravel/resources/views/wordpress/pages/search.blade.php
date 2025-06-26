@@ -18,6 +18,13 @@
             transform: translateY(-2px);
             box-shadow: 0 4px 8px rgba(0,0,0,0.1);
         }
+        .page-title {
+            color: #333;
+            text-decoration: none;
+        }
+        .page-title:hover {
+            color: #007bff;
+        }
     </style>
 </head>
 <body>
@@ -28,7 +35,7 @@
                 <nav aria-label="breadcrumb" class="mb-4">
                     <ol class="breadcrumb">
                         <li class="breadcrumb-item">
-                            <a href="{{ route('wordpress.pages.index') }}">Páginas</a>
+                            <a href="{{ route('wordpress.pages.index') }}" class="page-title">Páginas</a>
                         </li>
                         <li class="breadcrumb-item active" aria-current="page">Busca</li>
                     </ol>
@@ -68,7 +75,7 @@
                                     <div class="card-body">
                                         <h5 class="card-title">
                                             <a href="{{ route('wordpress.pages.show', $page->post_name) }}" 
-                                               class="text-decoration-none">
+                                               class="page-title">
                                                 {!! str_ireplace($term, '<span class="search-highlight">' . $term . '</span>', $page->post_title) !!}
                                             </a>
                                         </h5>
@@ -92,8 +99,8 @@
                                     </div>
                                     <div class="card-footer">
                                         <a href="{{ route('wordpress.pages.show', $page->post_name) }}" 
-                                           class="btn btn-sm btn-outline-primary">
-                                            Ler mais
+                                           class="btn btn-sm btn-primary">
+                                            Ler página
                                         </a>
                                     </div>
                                 </div>

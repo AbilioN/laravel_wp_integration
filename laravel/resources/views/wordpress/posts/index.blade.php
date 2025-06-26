@@ -17,6 +17,13 @@
             color: #666;
             font-size: 0.9em;
         }
+        .post-title {
+            color: #333;
+            text-decoration: none;
+        }
+        .post-title:hover {
+            color: #007bff;
+        }
     </style>
 </head>
 <body>
@@ -49,7 +56,8 @@
                                 <div class="card post-card h-100">
                                     <div class="card-body">
                                         <h5 class="card-title">
-                                            <a href="#" class="text-decoration-none">
+                                            <a href="http://wordpress.local/?p={{ $post->ID }}" 
+                                               target="_blank" class="post-title">
                                                 {{ $post->post_title }}
                                             </a>
                                         </h5>
@@ -69,12 +77,8 @@
                                     </div>
                                     <div class="card-footer">
                                         <a href="http://wordpress.local/?p={{ $post->ID }}" 
-                                           target="_blank" class="btn btn-sm btn-outline-primary">
-                                            Ver no WordPress
-                                        </a>
-                                        <a href="http://wordpress.local/wp-admin/post.php?post={{ $post->ID }}&action=edit" 
-                                           target="_blank" class="btn btn-sm btn-outline-info">
-                                            Editar
+                                           target="_blank" class="btn btn-sm btn-primary">
+                                            Ler no WordPress
                                         </a>
                                     </div>
                                 </div>
