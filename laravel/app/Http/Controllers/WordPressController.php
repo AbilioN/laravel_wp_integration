@@ -8,6 +8,7 @@ use App\Models\WordPressMenu;
 use Illuminate\Support\Facades\Cache;
 use App\Models\WordPressSettings;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class WordPressController extends Controller
 {
@@ -207,7 +208,7 @@ class WordPressController extends Controller
             $wordpressDb = DB::connection('wordpress');
             
             // Buscar a página My Account
-            $myAccountPage = $wordpressDb->table('wp_posts')
+            $myAccountPage = $wordpressDb->table('posts')
                 ->where('post_type', 'page')
                 ->where('post_status', 'publish')
                 ->where('post_content', 'like', '%woocommerce_my_account%')
@@ -238,7 +239,7 @@ class WordPressController extends Controller
             ];
             
             // Buscar meta dados da página
-            $metaData = $wordpressDb->table('wp_postmeta')
+            $metaData = $wordpressDb->table('postmeta')
                 ->where('post_id', $myAccountPage->ID)
                 ->get()
                 ->keyBy('meta_key');

@@ -21,12 +21,15 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 // WordPress Pages
 Route::prefix('wordpress')->name('wordpress.')->group(function () {
     Route::get('/pages', [WordPressController::class, 'index'])->name('pages.index');
+    
+    // Página My Account específica (DEVE vir ANTES da rota genérica)
+    Route::get('/pages/my-account', [WordPressController::class, 'showMyAccountPage'])->name('pages.my-account');
+    
+    // Rota genérica para outras páginas (DEVE vir DEPOIS)
     Route::get('/pages/{slug}', [WordPressController::class, 'show'])->name('pages.show');
+    
     Route::get('/posts', [WordPressController::class, 'posts'])->name('posts.index');
     Route::get('/search', [WordPressController::class, 'search'])->name('search');
-    
-    // Página My Account específica (acessada pela navbar)
-    Route::get('/pages/my-account', [WordPressController::class, 'showMyAccountPage'])->name('pages.my-account');
 });
 
 // WooCommerce My Account - redireciona para WordPress
