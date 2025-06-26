@@ -68,7 +68,15 @@ class WordPressSettings extends Model
      */
     public static function getSiteUrl()
     {
-        return self::where('option_name', 'home')->value('option_value') ?: 'http://wordpress.local';
+        return self::where('option_name', 'home')->value('option_value') ?: self::getWordPressUrl();
+    }
+
+    /**
+     * Buscar a URL do WordPress para redirecionamentos
+     */
+    public static function getWordPressUrl()
+    {
+        return env('WORDPRESS_URL', 'http://localhost:8080');
     }
 
     /**

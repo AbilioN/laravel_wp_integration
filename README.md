@@ -57,6 +57,9 @@ WORDPRESS_DB_PASSWORD=wordpress_password
 LARAVEL_DB_NAME=laravel_db
 LARAVEL_DB_USER=laravel_user
 LARAVEL_DB_PASSWORD=laravel_password
+
+# WordPress URL Configuration
+WORDPRESS_URL=http://localhost:8080
 ```
 
 ### 2. Criar Projeto Laravel
@@ -76,6 +79,9 @@ DB_PORT=3306
 DB_DATABASE=laravel_db
 DB_USERNAME=laravel_user
 DB_PASSWORD=laravel_password
+
+# WordPress URL Configuration
+WORDPRESS_URL=http://localhost:8080
 ```
 
 ### 4. Iniciar Containers
@@ -179,6 +185,20 @@ Ambos os sistemas podem acessar o mesmo banco MySQL:
 
 - **WordPress**: Usa tabelas com prefixo `wp_`
 - **Laravel**: Usa tabelas próprias do framework
+
+### Configuração da URL do WordPress
+
+O Laravel usa a variável `WORDPRESS_URL` do arquivo `.env` para gerar links corretos para o WordPress. Esta configuração é importante para:
+
+- Links de redirecionamento para posts e páginas
+- Integração com a API do WordPress
+- Navegação entre os sistemas
+
+Para alterar a URL do WordPress, edite a variável `WORDPRESS_URL` no arquivo `laravel/.env`:
+
+```env
+WORDPRESS_URL=http://localhost:8080
+```
 
 ### Exemplo de Integração
 
