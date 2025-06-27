@@ -1,51 +1,36 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PWA Status - <?php echo e($pwaInfo['name']); ?></title>
+<?php $__env->startSection('title', 'PWA Status - ' . $pwaInfo['name']); ?>
+<?php $__env->startSection('description', 'Status e informações da Progressive Web App'); ?>
+
+<?php $__env->startSection('styles'); ?>
+<style>
+    .feature-card {
+        border: 1px solid #e9ecef;
+        border-radius: 0.375rem;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        transition: transform 0.2s;
+    }
     
-    <!-- PWA Meta Tags -->
-    <meta name="theme-color" content="#007bff">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta name="apple-mobile-web-app-title" content="<?php echo e($pwaInfo['short_name']); ?>">
+    .feature-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
     
-    <!-- PWA Manifest -->
-    <link rel="manifest" href="/manifest.json">
+    .status-indicator {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        display: inline-block;
+        margin-right: 8px;
+    }
     
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    
-    <style>
-        .feature-card {
-            border: 1px solid #e9ecef;
-            border-radius: 0.375rem;
-            padding: 1.5rem;
-            margin-bottom: 1rem;
-            transition: transform 0.2s;
-        }
-        
-        .feature-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        }
-        
-        .status-indicator {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            display: inline-block;
-            margin-right: 8px;
-        }
-        
-        .status-online { background-color: #28a745; }
-        .status-offline { background-color: #dc3545; }
-        .status-warning { background-color: #ffc107; }
-    </style>
-</head>
-<body>
+    .status-online { background-color: #28a745; }
+    .status-offline { background-color: #dc3545; }
+    .status-warning { background-color: #ffc107; }
+</style>
+<?php $__env->stopSection(); ?>
+
+<?php $__env->startSection('content'); ?>
     <div class="container mt-4">
         <div class="row">
             <div class="col-12">
@@ -172,89 +157,85 @@
             </div>
         </div>
     </div>
+<?php $__env->stopSection(); ?>
 
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    
-    <!-- PWA Scripts -->
-    <script src="/js/pwa.js"></script>
-    
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Check connectivity
-            function updateConnectivity() {
-                const status = document.getElementById('connectivity-status');
-                const text = document.getElementById('connectivity-text');
+<?php $__env->startSection('scripts'); ?>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Check connectivity
+        function updateConnectivity() {
+            const status = document.getElementById('connectivity-status');
+            const text = document.getElementById('connectivity-text');
+            
+            if (navigator.onLine) {
+                status.className = 'status-indicator status-online';
+                text.textContent = 'Online';
+            } else {
+                status.className = 'status-indicator status-offline';
+                text.textContent = 'Offline';
+            }
+        }
+        
+        window.addEventListener('online', updateConnectivity);
+        window.addEventListener('offline', updateConnectivity);
+        updateConnectivity();
+        
+        // Check installable
+        function updateInstallable() {
+            const btn = document.getElementById('install-btn');
+            if (window.pwaManager && window.pwaManager.swRegistration) {
+                btn.style.display = 'block';
+            }
+        }
+        
+        // Notification button
+        document.getElementById('notification-btn').addEventListener('click', async function() {
+            if ('Notification' in window) {
+                const permission = await Notification.requestPermission();
+                const status = document.getElementById('notification-status');
+                const text = document.getElementById('notification-text');
                 
-                if (navigator.onLine) {
+                if (permission === 'granted') {
                     status.className = 'status-indicator status-online';
-                    text.textContent = 'Online';
+                    text.textContent = 'Ativado';
+                    this.disabled = true;
+                    this.innerHTML = '<i class="fas fa-check"></i> Ativado';
                 } else {
                     status.className = 'status-indicator status-offline';
-                    text.textContent = 'Offline';
+                    text.textContent = 'Negado';
                 }
             }
-            
-            window.addEventListener('online', updateConnectivity);
-            window.addEventListener('offline', updateConnectivity);
-            updateConnectivity();
-            
-            // Check installable
-            function updateInstallable() {
-                const btn = document.getElementById('install-btn');
-                if (window.pwaManager && window.pwaManager.swRegistration) {
-                    btn.style.display = 'block';
-                }
-            }
-            
-            // Notification button
-            document.getElementById('notification-btn').addEventListener('click', async function() {
-                if ('Notification' in window) {
-                    const permission = await Notification.requestPermission();
-                    const status = document.getElementById('notification-status');
-                    const text = document.getElementById('notification-text');
-                    
-                    if (permission === 'granted') {
-                        status.className = 'status-indicator status-online';
-                        text.textContent = 'Ativado';
-                        this.disabled = true;
-                        this.innerHTML = '<i class="fas fa-check"></i> Ativado';
-                    } else {
-                        status.className = 'status-indicator status-offline';
-                        text.textContent = 'Negado';
-                    }
-                }
-            });
-            
-            // Update button
-            document.getElementById('update-btn').addEventListener('click', function() {
-                if (window.pwaManager) {
-                    window.pwaManager.checkForAppUpdate();
-                    alert('Verificação de atualizações iniciada!');
-                }
-            });
-            
-            // Clear cache button
-            document.getElementById('clear-cache-btn').addEventListener('click', async function() {
-                try {
-                    const response = await fetch('/pwa/clear-cache', {
-                        method: 'POST',
-                        headers: {
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
-                            'Content-Type': 'application/json'
-                        }
-                    });
-                    
-                    const result = await response.json();
-                    alert(result.message);
-                } catch (error) {
-                    alert('Erro ao limpar cache: ' + error.message);
-                }
-            });
-            
-            // Initialize
-            setTimeout(updateInstallable, 1000);
         });
-    </script>
-</body>
-</html> <?php /**PATH /var/www/html/resources/views/pwa/status.blade.php ENDPATH**/ ?>
+        
+        // Update button
+        document.getElementById('update-btn').addEventListener('click', function() {
+            if (window.pwaManager) {
+                window.pwaManager.checkForAppUpdate();
+                alert('Verificação de atualizações iniciada!');
+            }
+        });
+        
+        // Clear cache button
+        document.getElementById('clear-cache-btn').addEventListener('click', async function() {
+            try {
+                const response = await fetch('/pwa/clear-cache', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const result = await response.json();
+                alert(result.message);
+            } catch (error) {
+                alert('Erro ao limpar cache: ' + error.message);
+            }
+        });
+        
+        // Initialize
+        setTimeout(updateInstallable, 1000);
+    });
+</script>
+<?php $__env->stopSection(); ?> 
+<?php echo $__env->make('layouts.pwa', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH /var/www/html/resources/views/pwa/status.blade.php ENDPATH**/ ?>

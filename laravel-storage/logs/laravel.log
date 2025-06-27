@@ -3495,3 +3495,26 @@
 #57 /var/www/html/public/index.php(20): Illuminate\\Foundation\\Application->handleRequest(Object(Illuminate\\Http\\Request))
 #58 {main}
 "} 
+[2025-06-27 11:02:47] local.ERROR: file_put_contents(/var/www/html/app/Providers/RouteServiceProvider.php): Failed to open stream: Permission denied {"exception":"[object] (ErrorException(code: 0): file_put_contents(/var/www/html/app/Providers/RouteServiceProvider.php): Failed to open stream: Permission denied at /var/www/html/vendor/laravel/framework/src/Illuminate/Filesystem/Filesystem.php:204)
+[stacktrace]
+#0 /var/www/html/vendor/laravel/framework/src/Illuminate/Foundation/Bootstrap/HandleExceptions.php(256): Illuminate\\Foundation\\Bootstrap\\HandleExceptions->handleError(2, 'file_put_conten...', '/var/www/html/v...', 204)
+#1 [internal function]: Illuminate\\Foundation\\Bootstrap\\HandleExceptions->Illuminate\\Foundation\\Bootstrap\\{closure}(2, 'file_put_conten...', '/var/www/html/v...', 204)
+#2 /var/www/html/vendor/laravel/framework/src/Illuminate/Filesystem/Filesystem.php(204): file_put_contents('/var/www/html/a...', '<?php\\n\\nnamespac...', 0)
+#3 /var/www/html/vendor/laravel/framework/src/Illuminate/Console/GeneratorCommand.php(181): Illuminate\\Filesystem\\Filesystem->put('/var/www/html/a...', '<?php\\n\\nnamespac...')
+#4 /var/www/html/vendor/laravel/framework/src/Illuminate/Foundation/Console/ProviderMakeCommand.php(43): Illuminate\\Console\\GeneratorCommand->handle()
+#5 /var/www/html/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(36): Illuminate\\Foundation\\Console\\ProviderMakeCommand->handle()
+#6 /var/www/html/vendor/laravel/framework/src/Illuminate/Container/Util.php(43): Illuminate\\Container\\BoundMethod::Illuminate\\Container\\{closure}()
+#7 /var/www/html/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(96): Illuminate\\Container\\Util::unwrapIfClosure(Object(Closure))
+#8 /var/www/html/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(35): Illuminate\\Container\\BoundMethod::callBoundMethod(Object(Illuminate\\Foundation\\Application), Array, Object(Closure))
+#9 /var/www/html/vendor/laravel/framework/src/Illuminate/Container/Container.php(754): Illuminate\\Container\\BoundMethod::call(Object(Illuminate\\Foundation\\Application), Array, Array, NULL)
+#10 /var/www/html/vendor/laravel/framework/src/Illuminate/Console/Command.php(209): Illuminate\\Container\\Container->call(Array)
+#11 /var/www/html/vendor/symfony/console/Command/Command.php(318): Illuminate\\Console\\Command->execute(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Illuminate\\Console\\OutputStyle))
+#12 /var/www/html/vendor/laravel/framework/src/Illuminate/Console/Command.php(178): Symfony\\Component\\Console\\Command\\Command->run(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Illuminate\\Console\\OutputStyle))
+#13 /var/www/html/vendor/symfony/console/Application.php(1092): Illuminate\\Console\\Command->run(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
+#14 /var/www/html/vendor/symfony/console/Application.php(341): Symfony\\Component\\Console\\Application->doRunCommand(Object(Illuminate\\Foundation\\Console\\ProviderMakeCommand), Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
+#15 /var/www/html/vendor/symfony/console/Application.php(192): Symfony\\Component\\Console\\Application->doRun(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
+#16 /var/www/html/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php(197): Symfony\\Component\\Console\\Application->run(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
+#17 /var/www/html/vendor/laravel/framework/src/Illuminate/Foundation/Application.php(1234): Illuminate\\Foundation\\Console\\Kernel->handle(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
+#18 /var/www/html/artisan(16): Illuminate\\Foundation\\Application->handleCommand(Object(Symfony\\Component\\Console\\Input\\ArgvInput))
+#19 {main}
+"} 
