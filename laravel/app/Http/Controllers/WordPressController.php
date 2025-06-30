@@ -272,10 +272,24 @@ class WordPressController extends Controller
      */
     public function processWordPressLogin(Request $request)
     {
+        // Validação dos campos
+        $request->validate([
+            'log' => 'required|string',
+            'pwd' => 'required|string',
+        ], [
+            'log.required' => 'O campo usuário/email é obrigatório.',
+            'pwd.required' => 'O campo senha é obrigatório.',
+        ]);
+
         try {
             $username = $request->input('log');
             $password = $request->input('pwd');
             $remember = $request->has('rememberme');
+            
+            \Log::info('Tentativa de login WordPress', [
+                'username' => $username,
+                'remember' => $remember
+            ]);
             
             // Conectar ao banco do WordPress
             $wordpressDb = DB::connection('wordpress');
@@ -284,15 +298,35 @@ class WordPressController extends Controller
             $user = $wordpressDb->table('users')
                 ->where('user_login', $username)
                 ->orWhere('user_email', $username)
+                ->where('user_status', 0) // Apenas usuários ativos
                 ->first();
             
             if (!$user) {
-                return back()->withErrors(['username' => 'Usuário não encontrado']);
+                \Log::warning('Usuário não encontrado no WordPress', ['username' => $username]);
+                return back()
+                    ->withInput($request->only('log'))
+                    ->withErrors(['log' => 'Usuário ou email não encontrado.']);
             }
             
+            \Log::info('Usuário encontrado no WordPress', [
+                'user_id' => $user->ID,
+                'user_login' => $user->user_login,
+                'hash_type' => substr($user->user_pass, 0, 3)
+            ]);
+            
             // Verificar senha usando hash do WordPress
-            if (!$this->wp_check_password($password, $user->user_pass)) {
-                return back()->withErrors(['password' => 'Senha incorreta']);
+            $passwordValid = $this->wp_check_password($password, $user->user_pass);
+            
+            \Log::info('Verificação de senha', [
+                'password_valid' => $passwordValid,
+                'hash_type' => substr($user->user_pass, 0, 3)
+            ]);
+            
+            if (!$passwordValid) {
+                \Log::warning('Senha incorreta para usuário', ['user_id' => $user->ID]);
+                return back()
+                    ->withInput($request->only('log'))
+                    ->withErrors(['pwd' => 'Senha incorreta.']);
             }
             
             // Criar sessão do WordPress
@@ -301,10 +335,16 @@ class WordPressController extends Controller
             // Criar sessão do Laravel
             $this->createLaravelSession($user);
             
-            return redirect()->intended('/wordpress/pages/my-account');
+            \Log::info('Login realizado com sucesso', ['user_id' => $user->ID]);
+            
+            return redirect()->intended('/wordpress/pages/my-account')
+                ->with('success', 'Login realizado com sucesso!');
             
         } catch (\Exception $e) {
-            return back()->withErrors(['general' => 'Erro ao fazer login: ' . $e->getMessage()]);
+            \Log::error('Erro no login WordPress: ' . $e->getMessage());
+            return back()
+                ->withInput($request->only('log'))
+                ->withErrors(['general' => 'Erro ao fazer login. Tente novamente.']);
         }
     }
 
@@ -463,7 +503,14 @@ class WordPressController extends Controller
      */
     private function wp_check_password($password, $hash)
     {
-        return password_verify($password, $hash);
+        // WordPress uses different hashing methods
+        if (strpos($hash, '$P$') === 0 || strpos($hash, '$2y$') === 0) {
+            // Modern WordPress uses PHPass or bcrypt
+            return password_verify($password, $hash);
+        } else {
+            // Old WordPress uses MD5
+            return md5($password) === $hash;
+        }
     }
 
     /**

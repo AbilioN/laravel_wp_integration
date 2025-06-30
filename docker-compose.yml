@@ -27,6 +27,8 @@ services:
     volumes:
       - ./wp-content:/var/www/html/wp-content
       - ./wordpress-uploads:/var/www/html/wp-content/uploads
+      - wordpress_data:/var/www/html/wp-content/plugins
+      - wordpress_data:/var/www/html/wp-content/themes
 
   laravel:
     build:
@@ -48,6 +50,10 @@ services:
     volumes:
       - ./laravel:/var/www/html
       - ./laravel-storage:/var/www/html/storage
+      - laravel_data:/var/www/html/bootstrap/cache
+      - laravel_data:/var/www/html/storage/framework/cache
+      - laravel_data:/var/www/html/storage/framework/sessions
+      - laravel_data:/var/www/html/storage/framework/views
     working_dir: /var/www/html
 
   nginx:
@@ -66,3 +72,5 @@ services:
 
 volumes:
   db_data:
+  wordpress_data:
+  laravel_data:

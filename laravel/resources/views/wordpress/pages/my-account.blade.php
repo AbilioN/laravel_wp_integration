@@ -9,6 +9,22 @@
     <div class="container main-content">
         <div class="row">
             <div class="col-12">
+                @if(session('success'))
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        <i class="fas fa-check-circle me-2"></i>
+                        {{ session('success') }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                @endif
+
+                @if(session('error'))
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <i class="fas fa-exclamation-circle me-2"></i>
+                        {{ session('error') }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                @endif
+
                 <h1 class="mb-4">Minha Conta</h1>
                 
                 @if($isLoggedIn)
@@ -91,15 +107,88 @@
                         </div>
                     </div>
                 @else
-                    <div class="text-center">
-                        <div class="alert alert-warning">
-                            <h4><i class="fas fa-exclamation-triangle me-2"></i>Não logado</h4>
-                            <p>Você precisa estar logado para acessar esta página.</p>
-                            <a href="{{ \App\Models\WordPressSettings::getWordPressUrl() }}/wp-login.php" 
-                               target="_blank" class="btn btn-primary">
-                                <i class="fas fa-sign-in-alt me-1"></i>
-                                Fazer Login
-                            </a>
+                    <div class="row justify-content-center">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="mb-0">
+                                        <i class="fas fa-sign-in-alt me-2"></i>
+                                        Fazer Login
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    @if($errors->any())
+                                        <div class="alert alert-danger">
+                                            <ul class="mb-0">
+                                                @foreach($errors->all() as $error)
+                                                    <li>{{ $error }}</li>
+                                                @endforeach
+                                            </ul>
+                                        </div>
+                                    @endif
+
+                                    <form method="POST" action="{{ route('wordpress.login') }}">
+                                        @csrf
+                                        
+                                        <div class="mb-3">
+                                            <label for="log" class="form-label">Usuário ou Email</label>
+                                            <input type="text" 
+                                                   class="form-control @error('log') is-invalid @enderror" 
+                                                   id="log" 
+                                                   name="log" 
+                                                   value="{{ old('log') }}" 
+                                                   required 
+                                                   autocomplete="username">
+                                            @error('log')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label for="pwd" class="form-label">Senha</label>
+                                            <input type="password" 
+                                                   class="form-control @error('pwd') is-invalid @enderror" 
+                                                   id="pwd" 
+                                                   name="pwd" 
+                                                   required 
+                                                   autocomplete="current-password">
+                                            @error('pwd')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+
+                                        <div class="mb-3 form-check">
+                                            <input type="checkbox" 
+                                                   class="form-check-input" 
+                                                   id="rememberme" 
+                                                   name="rememberme" 
+                                                   value="1">
+                                            <label class="form-check-label" for="rememberme">
+                                                Lembrar de mim
+                                            </label>
+                                        </div>
+
+                                        <div class="d-grid">
+                                            <button type="submit" class="btn btn-primary">
+                                                <i class="fas fa-sign-in-alt me-1"></i>
+                                                Entrar
+                                            </button>
+                                        </div>
+                                    </form>
+
+                                    <hr class="my-4">
+
+                                    <div class="text-center">
+                                        <p class="text-muted mb-2">Ou acesse diretamente no WordPress:</p>
+                                        <a href="{{ \App\Models\WordPressSettings::getWordPressUrl() }}/wp-login.php" 
+                                           target="_blank" 
+                                           class="btn btn-outline-secondary">
+                                            <i class="fas fa-external-link-alt me-1"></i>
+                                            Login no WordPress
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 @endif

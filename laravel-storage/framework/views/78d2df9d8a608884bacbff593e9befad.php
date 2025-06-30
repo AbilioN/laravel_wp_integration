@@ -7,6 +7,24 @@
     <div class="container main-content">
         <div class="row">
             <div class="col-12">
+                <?php if(session('success')): ?>
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        <i class="fas fa-check-circle me-2"></i>
+                        <?php echo e(session('success')); ?>
+
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                <?php endif; ?>
+
+                <?php if(session('error')): ?>
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <i class="fas fa-exclamation-circle me-2"></i>
+                        <?php echo e(session('error')); ?>
+
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                <?php endif; ?>
+
                 <h1 class="mb-4">Minha Conta</h1>
                 
                 <?php if($isLoggedIn): ?>
@@ -89,15 +107,116 @@
                         </div>
                     </div>
                 <?php else: ?>
-                    <div class="text-center">
-                        <div class="alert alert-warning">
-                            <h4><i class="fas fa-exclamation-triangle me-2"></i>Não logado</h4>
-                            <p>Você precisa estar logado para acessar esta página.</p>
-                            <a href="<?php echo e(\App\Models\WordPressSettings::getWordPressUrl()); ?>/wp-login.php" 
-                               target="_blank" class="btn btn-primary">
-                                <i class="fas fa-sign-in-alt me-1"></i>
-                                Fazer Login
-                            </a>
+                    <div class="row justify-content-center">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="mb-0">
+                                        <i class="fas fa-sign-in-alt me-2"></i>
+                                        Fazer Login
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    <?php if($errors->any()): ?>
+                                        <div class="alert alert-danger">
+                                            <ul class="mb-0">
+                                                <?php $__currentLoopData = $errors->all(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $error): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                                    <li><?php echo e($error); ?></li>
+                                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                                            </ul>
+                                        </div>
+                                    <?php endif; ?>
+
+                                    <form method="POST" action="<?php echo e(route('wordpress.login')); ?>">
+                                        <?php echo csrf_field(); ?>
+                                        
+                                        <div class="mb-3">
+                                            <label for="log" class="form-label">Usuário ou Email</label>
+                                            <input type="text" 
+                                                   class="form-control <?php $__errorArgs = ['log'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>" 
+                                                   id="log" 
+                                                   name="log" 
+                                                   value="<?php echo e(old('log')); ?>" 
+                                                   required 
+                                                   autocomplete="username">
+                                            <?php $__errorArgs = ['log'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                                                <div class="invalid-feedback"><?php echo e($message); ?></div>
+                                            <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label for="pwd" class="form-label">Senha</label>
+                                            <input type="password" 
+                                                   class="form-control <?php $__errorArgs = ['pwd'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>" 
+                                                   id="pwd" 
+                                                   name="pwd" 
+                                                   required 
+                                                   autocomplete="current-password">
+                                            <?php $__errorArgs = ['pwd'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                                                <div class="invalid-feedback"><?php echo e($message); ?></div>
+                                            <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
+                                        </div>
+
+                                        <div class="mb-3 form-check">
+                                            <input type="checkbox" 
+                                                   class="form-check-input" 
+                                                   id="rememberme" 
+                                                   name="rememberme" 
+                                                   value="1">
+                                            <label class="form-check-label" for="rememberme">
+                                                Lembrar de mim
+                                            </label>
+                                        </div>
+
+                                        <div class="d-grid">
+                                            <button type="submit" class="btn btn-primary">
+                                                <i class="fas fa-sign-in-alt me-1"></i>
+                                                Entrar
+                                            </button>
+                                        </div>
+                                    </form>
+
+                                    <hr class="my-4">
+
+                                    <div class="text-center">
+                                        <p class="text-muted mb-2">Ou acesse diretamente no WordPress:</p>
+                                        <a href="<?php echo e(\App\Models\WordPressSettings::getWordPressUrl()); ?>/wp-login.php" 
+                                           target="_blank" 
+                                           class="btn btn-outline-secondary">
+                                            <i class="fas fa-external-link-alt me-1"></i>
+                                            Login no WordPress
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 <?php endif; ?>
