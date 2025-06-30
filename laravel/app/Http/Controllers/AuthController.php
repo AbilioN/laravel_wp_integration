@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
+use Corcel\Model\User as WordPressUser;
 
 class AuthController extends Controller
 {
@@ -32,13 +33,10 @@ class AuthController extends Controller
         $password = $request->input('password');
 
         try {
-            // Buscar usuário no WordPress
-            $user = DB::connection('wordpress')
-                ->table('users')
-                ->where('user_login', $username)
+            // Buscar usuário no WordPress usando Corcel
+            $user = WordPressUser::where('user_login', $username)
                 ->orWhere('user_email', $username)
                 ->first();
-                dd($user);
 
             if (!$user) {
                 return back()->withErrors(['username' => 'Usuário não encontrado']);
@@ -70,33 +68,45 @@ class AuthController extends Controller
     }
 
     /**
-     * Verificar senha do WordPress usando script externo
+     * Verificar senha do WordPress
      */
     private function verifyWordPressPassword($password, $hash)
     {
-        // Criar script temporário
-        $script = "<?php
-require_once('/var/www/html/wp-config.php');
-require_once('/var/www/html/wp-includes/pluggable.php');
+        // Tenta bcrypt padrão
+        if (strpos($hash, '$2y$') === 0) {
+            return password_verify($password, $hash);
+        }
+        // Tenta MD5 antigo do WordPress
+        if (strlen($hash) === 32 && ctype_xdigit($hash)) {
+            return md5($password) === $hash;
+        }
+        // Se não reconhecido, falha
+        Log::warning('Formato de hash WordPress não reconhecido: ' . $hash);
+        return false;
+    }
 
-\$password = '" . addslashes($password) . "';
-\$hash = '" . addslashes($hash) . "';
-
-\$result = wp_check_password(\$password, \$hash);
-echo \$result ? 'true' : 'false';
-";
+    /**
+     * Verificar senha do WordPress usando script externo (para hashes antigos)
+     */
+    private function verifyWordPressPasswordExternal($password, $hash)
+    {
+        // Para hashes antigos do WordPress, vamos tentar uma abordagem mais simples
+        // Como o hash atual é $wp$ (WordPress custom), isso não deveria ser chamado
+        // Mas vamos implementar uma verificação básica
         
-        $tempFile = storage_path('temp_wp_check.php');
-        file_put_contents($tempFile, $script);
+        // Se for um hash MD5 antigo do WordPress
+        if (strlen($hash) === 32 && ctype_xdigit($hash)) {
+            return md5($password) === $hash;
+        }
         
-        // Executar no container WordPress
-        $command = "docker-compose exec -T wordpress php " . $tempFile;
-        $output = shell_exec($command);
+        // Se for um hash bcrypt sem prefixo
+        if (strpos($hash, '$2y$') === 0) {
+            return password_verify($password, $hash);
+        }
         
-        // Limpar arquivo
-        unlink($tempFile);
-        
-        return trim($output) === 'true';
+        // Se chegou aqui, não conseguimos verificar
+        Log::warning('Hash WordPress não reconhecido: ' . $hash);
+        return false;
     }
 
     /**
