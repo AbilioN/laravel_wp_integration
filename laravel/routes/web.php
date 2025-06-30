@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\WordPressController;
 use App\Http\Controllers\AuthController;
-use App\Http\Controllers\ProductController;
+use App\Http\Controllers\CorcelProductController;
 use App\Http\Controllers\CartController;
 
 /*
@@ -22,22 +22,23 @@ use App\Http\Controllers\CartController;
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
 // Autenticação
-Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
+Route::get('/login', [AuthController::class, 'showLogin'])->name('auth.login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');
-Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+Route::post('/logout', [AuthController::class, 'logout'])->name('auth.logout');
+Route::get('/profile', [AuthController::class, 'profile'])->name('auth.profile');
 
 // Dashboard (protegido)
 Route::get('/dashboard', function () {
-    if (!AuthController::isLoggedIn()) {
+    if (!\App\Helpers\AuthHelper::isLoggedIn()) {
         return redirect('/login');
     }
-    $user = AuthController::getCurrentUser();
+    $user = \App\Helpers\AuthHelper::getCurrentUser();
     return view('dashboard', compact('user'));
 })->name('dashboard');
 
 // Produtos
-Route::get('/products', [ProductController::class, 'index'])->name('products.index');
-Route::get('/products/{slug}', [ProductController::class, 'show'])->name('products.show');
+Route::get('/products', [CorcelProductController::class, 'index'])->name('products.index');
+Route::get('/products/{slug}', [CorcelProductController::class, 'show'])->name('products.show');
 
 // Carrinho
 Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
@@ -49,8 +50,8 @@ Route::post('/cart/checkout', [CartController::class, 'checkout'])->name('cart.c
 
 // API Routes
 Route::prefix('api')->name('api.')->group(function () {
-    Route::get('/products', [ProductController::class, 'apiIndex'])->name('products.index');
-    Route::get('/products/{id}', [ProductController::class, 'apiShow'])->name('products.show');
+    Route::get('/products', [CorcelProductController::class, 'apiIndex'])->name('products.index');
+    Route::get('/products/{id}', [CorcelProductController::class, 'apiShow'])->name('products.show');
     Route::get('/cart', [CartController::class, 'apiIndex'])->name('cart.index');
     Route::post('/cart/add', [CartController::class, 'apiAdd'])->name('cart.add');
 });

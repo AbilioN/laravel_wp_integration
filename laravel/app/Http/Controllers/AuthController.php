@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use Corcel\Model\User as WordPressUser;
+use App\Helpers\AuthHelper;
 
 class AuthController extends Controller
 {
@@ -65,6 +66,19 @@ class AuthController extends Controller
     {
         $this->destroySession();
         return redirect('/')->with('success', 'Logout realizado com sucesso!');
+    }
+
+    /**
+     * Mostrar perfil do usuário
+     */
+    public function profile()
+    {
+        if (!AuthHelper::isLoggedIn()) {
+            return redirect('/login');
+        }
+
+        $user = AuthHelper::getCurrentUser();
+        return view('auth.profile', compact('user'));
     }
 
     /**
@@ -206,7 +220,7 @@ echo \$result ? 'true' : 'false';
      */
     public static function isLoggedIn()
     {
-        return session('logged_in', false);
+        return AuthHelper::isLoggedIn();
     }
 
     /**
@@ -214,15 +228,6 @@ echo \$result ? 'true' : 'false';
      */
     public static function getCurrentUser()
     {
-        if (!self::isLoggedIn()) {
-            return null;
-        }
-
-        return (object) [
-            'id' => session('user_id'),
-            'username' => session('username'),
-            'email' => session('email'),
-            'display_name' => session('display_name')
-        ];
+        return AuthHelper::getCurrentUser();
     }
 } 

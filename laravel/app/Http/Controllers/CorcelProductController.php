@@ -15,32 +15,81 @@ class CorcelProductController extends Controller
      */
     public function index(Request $request)
     {
-        $products = Cache::remember('corcel_products', 300, function () {
-            return Post::type('product')
-                      ->status('publish')
-                      ->with(['meta', 'taxonomies'])
-                      ->orderBy('post_date', 'desc')
-                      ->get()
-                      ->map(function ($product) {
-                          return [
-                              'id' => $product->ID,
-                              'title' => $product->post_title,
-                              'content' => $product->post_content,
-                              'excerpt' => $product->post_excerpt,
-                              'slug' => $product->post_name,
-                              'price' => $product->meta->_price ?? 0,
-                              'sale_price' => $product->meta->_sale_price ?? null,
-                              'regular_price' => $product->meta->_regular_price ?? 0,
-                              'featured_image' => $this->getProductImage($product),
-                              'categories' => $this->getProductCategories($product),
-                              'tags' => $this->getProductTags($product),
-                              'date' => $product->post_date,
-                              'modified' => $product->post_modified
-                          ];
-                      });
+        // Buscar categorias para o filtro
+        $categories = Taxonomy::where('taxonomy', 'product_cat')
+                             ->with('term')
+                             ->get()
+                             ->map(function ($taxonomy) {
+                                 return (object) [
+                                     'term_id' => $taxonomy->term_id,
+                                     'name' => $taxonomy->term->name,
+                                     'slug' => $taxonomy->term->slug
+                                 ];
+                             });
+
+        // Construir query base
+        $query = Post::type('product')
+                    ->status('publish')
+                    ->with(['meta', 'taxonomies']);
+
+        // Aplicar filtros
+        if ($request->filled('search')) {
+            $search = $request->get('search');
+            $query->where(function ($q) use ($search) {
+                $q->where('post_title', 'like', "%{$search}%")
+                  ->orWhere('post_content', 'like', "%{$search}%")
+                  ->orWhere('post_excerpt', 'like', "%{$search}%");
+            });
+        }
+
+        if ($request->filled('category')) {
+            $categoryId = $request->get('category');
+            $category = Taxonomy::where('taxonomy', 'product_cat')
+                               ->where('term_id', $categoryId)
+                               ->first();
+            if ($category) {
+                $query->taxonomy('product_cat', $category->term->slug);
+            }
+        }
+
+        // Aplicar ordenação
+        $sort = $request->get('sort', 'date');
+        switch ($sort) {
+            case 'title':
+                $query->orderBy('post_title', 'asc');
+                break;
+            case 'price_low':
+                $query->orderByRaw('CAST(meta_value AS DECIMAL(10,2)) ASC');
+                break;
+            case 'price_high':
+                $query->orderByRaw('CAST(meta_value AS DECIMAL(10,2)) DESC');
+                break;
+            default:
+                $query->orderBy('post_date', 'desc');
+                break;
+        }
+
+        // Buscar produtos
+        $products = $query->get()->map(function ($product) {
+            return (object) [
+                'ID' => $product->ID,
+                'post_title' => $product->post_title,
+                'post_content' => $product->post_content,
+                'post_excerpt' => $product->post_excerpt,
+                'post_name' => $product->post_name,
+                'post_status' => $product->post_status,
+                'post_date' => $product->post_date,
+                'post_modified' => $product->post_modified,
+                'featured_image' => $this->getProductImage($product),
+                'meta' => (object) [
+                    '_price' => $product->meta->_price ?? null,
+                    '_sale_price' => $product->meta->_sale_price ?? null,
+                    '_regular_price' => $product->meta->_regular_price ?? null,
+                ]
+            ];
         });
 
-        return view('products.index', compact('products'));
+        return view('products.index', compact('products', 'categories'));
     }
 
     /**

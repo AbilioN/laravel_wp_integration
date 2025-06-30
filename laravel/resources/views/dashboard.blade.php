@@ -68,7 +68,7 @@
                             </a></li>
                             <li><hr class="dropdown-divider"></li>
                             <li>
-                                <form method="POST" action="{{ route('logout') }}" class="d-inline">
+                                <form method="POST" action="{{ route('auth.logout') }}" class="d-inline">
                                     @csrf
                                     <button type="submit" class="dropdown-item">
                                         <i class="fas fa-sign-out-alt me-2"></i>Sair
