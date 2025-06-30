@@ -154,12 +154,12 @@
             @endforeach
         </div>
 
-        <!-- Paginação -->
-        @if($products->hasPages())
+        <!-- Paginação - Temporariamente desabilitada -->
+        {{-- @if($products->hasPages())
             <div class="mt-8">
                 {{ $products->links() }}
             </div>
-        @endif
+        @endif --}}
 
     @else
         <!-- Estado Vazio -->

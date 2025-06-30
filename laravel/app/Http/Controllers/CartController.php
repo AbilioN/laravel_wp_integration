@@ -14,14 +14,26 @@ class CartController extends Controller
     public function index()
     {
         $cart = session('cart', []);
-        $total = 0;
+        
+        // Limpar itens antigos que não têm a estrutura correta
+        $cart = array_filter($cart, function($item) {
+            return isset($item['id']) && isset($item['name']) && isset($item['price']) && isset($item['quantity']);
+        });
+        
+        $cartItems = array_values($cart);
+        $totalItems = 0;
+        $subtotal = 0;
 
-        // Calcular total
+        // Calcular totais
         foreach ($cart as $item) {
-            $total += $item['price'] * $item['quantity'];
+            $totalItems += $item['quantity'];
+            $subtotal += $item['price'] * $item['quantity'];
         }
 
-        return view('cart.index', compact('cart', 'total'));
+        // Atualizar sessão com carrinho limpo
+        session(['cart' => $cart]);
+
+        return view('cart.index', compact('cartItems', 'totalItems', 'subtotal'));
     }
 
     /**
@@ -44,6 +56,10 @@ class CartController extends Controller
                 $join->on('p.ID', '=', 'pm_price.post_id')
                      ->where('pm_price.meta_key', '_price');
             })
+            ->leftJoin('postmeta as pm_image', function($join) {
+                $join->on('p.ID', '=', 'pm_image.post_id')
+                     ->where('pm_image.meta_key', '_thumbnail_id');
+            })
             ->where('p.post_type', 'product')
             ->where('p.post_status', 'publish')
             ->where('p.ID', $productId)
@@ -51,7 +67,8 @@ class CartController extends Controller
                 'p.ID',
                 'p.post_title',
                 'p.post_name',
-                'pm_price.meta_value as price'
+                'pm_price.meta_value as price',
+                'pm_image.meta_value as image_id'
             ])
             ->first();
 
@@ -70,7 +87,8 @@ class CartController extends Controller
                 'name' => $product->post_title,
                 'slug' => $product->post_name,
                 'price' => (float) $product->price,
-                'quantity' => $quantity
+                'quantity' => $quantity,
+                'image' => $product->image_id ? 'http://localhost:8080/wp-content/uploads/' . $product->image_id . '.jpg' : null
             ];
         }
 
@@ -86,18 +104,25 @@ class CartController extends Controller
     {
         $request->validate([
             'product_id' => 'required|integer',
-            'quantity' => 'required|integer|min:0'
+            'action' => 'required|in:increase,decrease'
         ]);
 
         $productId = $request->input('product_id');
-        $quantity = $request->input('quantity');
+        $action = $request->input('action');
 
         $cart = session('cart', []);
 
-        if ($quantity == 0) {
-            unset($cart[$productId]);
+        if (!isset($cart[$productId])) {
+            return back()->withErrors(['product' => 'Produto não encontrado no carrinho']);
+        }
+
+        if ($action === 'increase') {
+            $cart[$productId]['quantity']++;
         } else {
-            $cart[$productId]['quantity'] = $quantity;
+            $cart[$productId]['quantity']--;
+            if ($cart[$productId]['quantity'] <= 0) {
+                unset($cart[$productId]);
+            }
         }
 
         session(['cart' => $cart]);
@@ -207,6 +232,10 @@ class CartController extends Controller
                 $join->on('p.ID', '=', 'pm_price.post_id')
                      ->where('pm_price.meta_key', '_price');
             })
+            ->leftJoin('postmeta as pm_image', function($join) {
+                $join->on('p.ID', '=', 'pm_image.post_id')
+                     ->where('pm_image.meta_key', '_thumbnail_id');
+            })
             ->where('p.post_type', 'product')
             ->where('p.post_status', 'publish')
             ->where('p.ID', $productId)
@@ -214,7 +243,8 @@ class CartController extends Controller
                 'p.ID',
                 'p.post_title',
                 'p.post_name',
-                'pm_price.meta_value as price'
+                'pm_price.meta_value as price',
+                'pm_image.meta_value as image_id'
             ])
             ->first();
 
@@ -235,7 +265,8 @@ class CartController extends Controller
                 'name' => $product->post_title,
                 'slug' => $product->post_name,
                 'price' => (float) $product->price,
-                'quantity' => $quantity
+                'quantity' => $quantity,
+                'image' => $product->image_id ? 'http://localhost:8080/wp-content/uploads/' . $product->image_id . '.jpg' : null
             ];
         }
 
