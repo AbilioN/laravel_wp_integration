@@ -204,3 +204,13 @@ if ( ! function_exists( 'twentytwentyfour_pattern_categories' ) ) :
 endif;
 
 add_action( 'init', 'twentytwentyfour_pattern_categories' );
+
+// Configurar CORS para permitir acesso da aplicação Vue
+add_action('init', function() {
+    header("Access-Control-Allow-Origin: *");
+    header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
+    header("Access-Control-Allow-Headers: Content-Type, Authorization");
+});
+
+// Configurações adicionais para JWT Authentication
+add_filter('jwt_auth_cors_allow_origin', '__return_true');
