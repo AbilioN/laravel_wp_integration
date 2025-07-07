@@ -262,20 +262,57 @@ DELETE http://localhost:8080/index.php?rest_route=/wc/v3/products/attributes/{at
 
 #### Avaliações de Produtos
 ```bash
-# Listar avaliações de um produto
-GET http://localhost:8080/index.php?rest_route=/wc/v3/products/{product_id}/reviews
+# Listar avaliações de um produto (MÉTODO CORRETO)
+GET http://localhost:8080/index.php?rest_route=/wc/v3/products/reviews?product={product_id}
+
+# Listar todas as avaliações
+GET http://localhost:8080/index.php?rest_route=/wc/v3/products/reviews
 
 # Buscar avaliação específica
-GET http://localhost:8080/index.php?rest_route=/wc/v3/products/{product_id}/reviews/{review_id}
+GET http://localhost:8080/index.php?rest_route=/wc/v3/products/reviews/{review_id}
 
 # Criar avaliação
-POST http://localhost:8080/index.php?rest_route=/wc/v3/products/{product_id}/reviews
+POST http://localhost:8080/index.php?rest_route=/wc/v3/products/reviews
+
+# Exemplo de criação de review:
+curl -X POST "http://localhost:8080/index.php?rest_route=/wc/v3/products/reviews" \
+  -H "Authorization: Bearer {token}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "product_id": 16,
+    "reviewer": "João Silva",
+    "reviewer_email": "joao@email.com",
+    "review": "Excelente produto! Casa muito bem localizada e com ótima qualidade.",
+    "rating": 5,
+    "status": "approved"
+  }'
+
+# Parâmetros obrigatórios:
+# - product_id: ID do produto
+# - reviewer: Nome do revisor
+# - reviewer_email: Email do revisor
+# - review: Texto da avaliação
+# - rating: Nota (1-5)
+
+# Parâmetros opcionais:
+# - status: "approved", "pending", "spam" (padrão: "pending")
+# - verified: true/false (se é compra verificada)
+
+# Exemplos de filtros:
+# Reviews de produto específico
+GET http://localhost:8080/index.php?rest_route=/wc/v3/products/reviews?product=16
+
+# Reviews aprovadas
+GET http://localhost:8080/index.php?rest_route=/wc/v3/products/reviews?status=approved
+
+# Reviews com paginação
+GET http://localhost:8080/index.php?rest_route=/wc/v3/products/reviews?page=1&per_page=10
 
 # Atualizar avaliação
-PUT http://localhost:8080/index.php?rest_route=/wc/v3/products/{product_id}/reviews/{review_id}
+PUT http://localhost:8080/index.php?rest_route=/wc/v3/products/reviews/{review_id}
 
 # Deletar avaliação
-DELETE http://localhost:8080/index.php?rest_route=/wc/v3/products/{product_id}/reviews/{review_id}
+DELETE http://localhost:8080/index.php?rest_route=/wc/v3/products/reviews/{review_id}
 ```
 
 #### Pedidos
