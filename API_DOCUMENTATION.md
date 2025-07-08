@@ -836,3 +836,322 @@ O WordPress está configurado para aceitar requisições de qualquer origem:
 6. **Versões**: WooCommerce v3 é a versão mais recente e recomendada
 7. **Store API**: Para frontend, use a Store API que é pública
 8. **Rate Limiting**: Não há limite de requisições configurado 
+
+## Fluxo Completo para Finalizar Compra
+
+### 1. Preparação (Configurar Gateway de Pagamento)
+
+#### Habilitar método de pagamento:
+```bash
+# Habilitar transferência bancária (para testes)
+PUT http://localhost:8080/index.php?rest_route=/wc/v3/payment_gateways/bacs
+Authorization: Bearer {token}
+Content-Type: application/json
+
+{
+  "enabled": true
+}
+
+# Ou habilitar pagamento na entrega
+PUT http://localhost:8080/index.php?rest_route=/wc/v3/payment_gateways/cod
+Authorization: Bearer {token}
+Content-Type: application/json
+
+{
+  "enabled": true
+}
+```
+
+### 2. Obter Dados Necessários
+
+#### Listar métodos de pagamento disponíveis:
+```bash
+GET http://localhost:8080/index.php?rest_route=/wc/v3/payment_gateways
+Authorization: Bearer {token}
+```
+
+#### Obter carrinho atual:
+```bash
+GET http://localhost:8080/index.php?rest_route=/wc/store/v1/cart
+```
+
+#### Obter dados do checkout:
+```bash
+GET http://localhost:8080/index.php?rest_route=/wc/store/v1/checkout
+```
+
+### 3. Finalizar Compra (Checkout)
+
+#### Processar checkout (ROTA PRINCIPAL):
+```bash
+POST http://localhost:8080/index.php?rest_route=/wc/store/v1/checkout
+Nonce: {nonce}
+Content-Type: application/json
+
+{
+  "billing_address": {
+    "first_name": "João",
+    "last_name": "Silva",
+    "company": "",
+    "address_1": "Rua das Flores, 123",
+    "address_2": "",
+    "city": "Lisboa",
+    "state": "Lisboa",
+    "postcode": "1000-001",
+    "country": "PT",
+    "email": "joao@email.com",
+    "phone": "912345678"
+  },
+  "shipping_address": {
+    "first_name": "João",
+    "last_name": "Silva",
+    "company": "",
+    "address_1": "Rua das Flores, 123",
+    "address_2": "",
+    "city": "Lisboa",
+    "state": "Lisboa",
+    "postcode": "1000-001",
+    "country": "PT",
+    "phone": "912345678"
+  },
+  "payment_method": "bacs",
+  "payment_data": [],
+  "create_account": false,
+  "customer_note": "Observações do cliente (opcional)"
+}
+```
+
+### 4. Alternativa: Criar Pedido Diretamente (Backend)
+
+#### Criar pedido via API de pedidos:
+```bash
+POST http://localhost:8080/index.php?rest_route=/wc/v3/orders
+Authorization: Bearer {token}
+Content-Type: application/json
+
+{
+  "payment_method": "bacs",
+  "payment_method_title": "Transferência Bancária",
+  "set_paid": false,
+  "billing":{
+    "first_name": "João",
+    "last_name": "Silva",
+    "address_1": "Rua das Flores, 123",
+    "city": "Lisboa",
+    "state": "Lisboa",
+    "postcode": "1000-001",
+    "country": "PT",
+    "email": "joao@email.com",
+    "phone": "912345678"
+  },
+  "shipping": {
+    "first_name": "João",
+    "last_name": "Silva",
+    "address_1": "Rua das Flores, 123",
+    "city": "Lisboa",
+    "state": "Lisboa",
+    "postcode": "1000-001",
+    "country": "PT"
+  },
+  "line_items": [
+    {
+      "product_id": 16,
+      "quantity": 1
+    }
+  ],
+  "customer_note": "Observações do cliente"
+}
+```
+
+### 5. Pós-Compra
+
+#### Buscar pedido criado:
+```bash
+GET http://localhost:8080/index.php?rest_route=/wc/v3/orders/{order_id}
+Authorization: Bearer {token}
+```
+
+#### Limpar carrinho (após sucesso):
+```bash
+POST http://localhost:8080/index.php?rest_route=/wc/store/v1/cart/remove-item
+X-WP-Nonce: {nonce}
+Content-Type: application/json
+
+{
+  "key": "{item_key}"
+}
+```
+
+### 6. Sequência de Implementação no Frontend
+
+#### Passo 1: Obter nonce
+```javascript
+// GET /wp-json/wp/v2/users/me
+// Extrair X-WP-Nonce do header da resposta
+```
+
+#### Passo 2: Validar carrinho
+```javascript
+// GET /wp-json/wc/store/v1/cart
+// Verificar se há itens no carrinho
+```
+
+#### Passo 3: Obter gateways disponíveis
+```javascript
+// GET /wp-json/wc/v3/payment_gateways
+// Filtrar apenas os habilitados (enabled: true)
+```
+
+#### Passo 4: Processar checkout
+```javascript
+// POST /wp-json/wc/store/v1/checkout
+// Com dados do formulário + método de pagamento
+```
+
+#### Passo 5: Tratar resposta
+```javascript
+// Se sucesso: limpar carrinho e redirecionar
+// Se erro: mostrar mensagem de erro
+```
+
+### 7. Exemplo de Resposta de Sucesso
+
+```json
+{
+  "id": 123,
+  "number": "123",
+  "order_key": "wc_order_abc123",
+  "created_via": "checkout",
+  "version": "8.0.0",
+  "status": "pending",
+  "currency": "EUR",
+  "date_created": "2025-07-07T12:00:00",
+  "date_created_gmt": "2025-07-07T12:00:00",
+  "date_modified": "2025-07-07T12:00:00",
+  "date_modified_gmt": "2025-07-07T12:00:00",
+  "discount_total": "0",
+  "discount_tax": "0",
+  "shipping_total": "0",
+  "shipping_tax": "0",
+  "cart_tax": "0",
+  "total": "120000",
+  "total_tax": "0",
+  "prices_include_tax": false,
+  "customer_id": 0,
+  "customer_ip_address": "127.0.0.1",
+  "customer_user_agent": "Mozilla/5.0...",
+  "customer_note": "",
+  "billing": {
+    "first_name": "João",
+    "last_name": "Silva",
+    "company": "",
+    "address_1": "Rua das Flores, 123",
+    "address_2": "",
+    "city": "Lisboa",
+    "state": "Lisboa",
+    "postcode": "1000-001",
+    "country": "PT",
+    "email": "joao@email.com",
+    "phone": "912345678"
+  },
+  "shipping": {
+    "first_name": "João",
+    "last_name": "Silva",
+    "company": "",
+    "address_1": "Rua das Flores, 123",
+    "address_2": "",
+    "city": "Lisboa",
+    "state": "Lisboa",
+    "postcode": "1000-001",
+    "country": "PT"
+  },
+  "payment_method": "bacs",
+  "payment_method_title": "Direct bank transfer",
+  "transaction_id": "",
+  "date_paid": null,
+  "date_paid_gmt": null,
+  "date_completed": null,
+  "date_completed_gmt": null,
+  "cart_hash": "abc123",
+  "meta_data": [],
+  "line_items": [
+    {
+      "id": 456,
+      "name": "Meu produto",
+      "product_id": 16,
+      "variation_id": 0,
+      "quantity": 1,
+      "tax_class": "",
+      "subtotal": "120000",
+      "subtotal_tax": "0",
+      "total": "120000",
+      "total_tax": "0",
+      "taxes": [],
+      "meta_data": [],
+      "sku": "",
+      "price": 120000
+    }
+  ],
+  "tax_lines": [],
+  "shipping_lines": [],
+  "fee_lines": [],
+  "coupon_lines": [],
+  "refunds": [],
+  "_links": {
+    "self": [
+      {
+        "href": "http://localhost:8080/index.php?rest_route=/wc/v3/orders/123"
+      }
+    ],
+    "collection": [
+      {
+        "href": "http://localhost:8080/index.php?rest_route=/wc/v3/orders"
+      }
+    ]
+  }
+}
+```
+
+### 8. Códigos de Status de Pedido
+
+- `pending` - Aguardando pagamento
+- `processing` - Processando
+- `on-hold` - Em espera
+- `completed` - Concluído
+- `cancelled` - Cancelado
+- `refunded` - Reembolsado
+- `failed` - Falhou
+
+### 9. Tratamento de Erros
+
+#### Erro comum: Nonce inválido
+```json
+{
+  "code": "woocommerce_rest_missing_nonce",
+  "message": "Missing the Nonce header. This endpoint requires a valid nonce.",
+  "data": {
+    "status": 401
+  }
+}
+```
+
+#### Erro comum: Carrinho vazio
+```json
+{
+  "code": "woocommerce_rest_cart_empty",
+  "message": "Cart is empty.",
+  "data": {
+    "status": 400
+  }
+}
+```
+
+#### Erro comum: Gateway não habilitado
+```json
+{
+  "code": "woocommerce_rest_invalid_payment_method",
+  "message": "Invalid payment method.",
+  "data": {
+    "status": 400
+  }
+} 
