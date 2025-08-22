@@ -933,7 +933,90 @@ Content-Type: application/json
   "payment_method": "bacs",
   "payment_method_title": "Transferência Bancária",
   "set_paid": false,
+  "customer_id": 1,
   "billing":{
+    "first_name": "João",
+    "last_name": "Silva",
+    "address_1": "Rua das Flores, 123",
+    "city": "Lisboa",
+    "state": "Lisboa",
+    "postcode": "1000-001",
+    "country": "PT",
+    "email": "joao@email.com",
+    "phone": "912345678"
+  },
+  "shipping": {
+    "first_name": "João",
+    "last_name": "Silva",
+    "address_1": "Rua das Flores, 123",
+    "city": "Lisboa",
+    "state": "Lisboa",
+    "postcode": "1000-001",
+    "country": "PT"
+  },
+  "line_items": [
+    {
+      "product_id": 16,
+      "quantity": 1
+    }
+  ],
+  "customer_note": "Observações do cliente"
+}
+```
+
+#### Criar pedido vinculado a usuário específico:
+```bash
+POST http://localhost:8080/index.php?rest_route=/wc/v3/orders
+Authorization: Bearer {token}
+Content-Type: application/json
+
+{
+  "customer_id": 1,
+  "payment_method": "bacs",
+  "payment_method_title": "Transferência Bancária",
+  "set_paid": false,
+  "billing": {
+    "first_name": "João",
+    "last_name": "Silva",
+    "address_1": "Rua das Flores, 123",
+    "city": "Lisboa",
+    "state": "Lisboa",
+    "postcode": "1000-001",
+    "country": "PT",
+    "email": "joao@email.com",
+    "phone": "912345678"
+  },
+  "shipping": {
+    "first_name": "João",
+    "last_name": "Silva",
+    "address_1": "Rua das Flores, 123",
+    "city": "Lisboa",
+    "state": "Lisboa",
+    "postcode": "1000-001",
+    "country": "PT"
+  },
+  "line_items": [
+    {
+      "product_id": 16,
+      "quantity": 1
+    }
+  ],
+  "customer_note": "Observações do cliente"
+}
+```
+
+#### Criar pedido e conta de usuário automaticamente:
+```bash
+POST http://localhost:8080/index.php?rest_route=/wc/v3/orders
+Authorization: Bearer {token}
+Content-Type: application/json
+
+{
+  "payment_method": "bacs",
+  "payment_method_title": "Transferência Bancária",
+  "set_paid": false,
+  "create_account": true,
+  "billing": {
     "first_name": "João",
     "last_name": "Silva",
     "address_1": "Rua das Flores, 123",
